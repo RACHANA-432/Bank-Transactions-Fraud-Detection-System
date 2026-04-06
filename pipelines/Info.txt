@@ -1,0 +1,1 @@
+This contains the Azure DataFactory Pipelines JSON files.
