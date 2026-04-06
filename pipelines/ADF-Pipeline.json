@@ -1,0 +1,144 @@
+{
+    "name": "project-pipeline-main",
+    "properties": {
+        "activities": [
+            {
+                "name": "01_Ingest_Bronze_Layer",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Sql-to-Bronze",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/bank-project/01-Ingest(Bronze Layer)"
+                },
+                "linkedServiceName": {
+                    "referenceName": "databricks_ls",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "02_Bronze_to_Silver",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "01_Ingest_Bronze_Layer",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/bank-project/02-Bronze-to-Silver"
+                },
+                "linkedServiceName": {
+                    "referenceName": "databricks_ls",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "03_Silver_to_Gold",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "02_Bronze_to_Silver",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/bank-project/03-Silver-to-Gold"
+                },
+                "linkedServiceName": {
+                    "referenceName": "databricks_ls",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Sql-to-Bronze",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "sink": {
+                        "type": "DelimitedTextSink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings",
+                            "copyBehavior": "FlattenHierarchy"
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextWriteSettings",
+                            "quoteAllText": true,
+                            "fileExtension": ".txt"
+                        }
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "azure_sql_ds",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "adls_bronze",
+                        "type": "DatasetReference"
+                    }
+                ]
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2026-04-04T17:49:12Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
